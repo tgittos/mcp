@@ -48,6 +48,8 @@ class Ralph:
                 } for tool in tools
             ]
 
+            logger.info(f"Available tools: {', '.join(tool['name'] for tool in formatted_tools)}")
+
             messages = [
                 {"role": "system", "content": self.agent},
                 {"role": "user", "content": self.message}

@@ -46,8 +46,8 @@ async def ralph(arguments):
 
 # Tool metadata for registration
 ralph_metadata = {
-    "name": "start_ralph_subprocesses",
-    "description": "Start multiple Ralph subprocesses with given user messages and return their outputs.",
+    "name": "ralph",
+    "description": "Starts a Ralph with a given task, one per Ralph",
     "inputSchema": {
         "type": "object",
         "properties": {
@@ -56,7 +56,7 @@ ralph_metadata = {
                 "items": {
                     "type": "string"
                 },
-                "description": "List of user messages to pass to Ralph subprocesses, one per Ralph subprocess."
+                "description": "List of tasks to pass to Ralph subprocesses, one per Ralph subprocess."
             }
         },
         "required": ["messages"]
