@@ -6,10 +6,8 @@ Ralph is a loop-based parallelized autonomous agent system that implements the R
 ## Core Architecture
 
 ### Main Loop
-The system operates on a single infinite loop:
-```bash
-while :; do cat PROMPT.md | npx --yes @sourcegraph/amp ; done
-```
+- Loop until the task is complete
+- Loops can spawn Ralph sub-processes that also loop until the sub-processes task is complete
 
 ### Memory Management
 - **Primary Context Window**: ~156kb for main process
