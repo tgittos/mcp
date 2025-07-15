@@ -4,6 +4,7 @@ Tool for listing files in a directory, optionally recursively.
 """
 
 import os
+import json
 
 async def list_files_tool(arguments):
     """Tool function for listing files in a directory"""
@@ -27,14 +28,7 @@ async def list_files_tool(arguments):
                 if os.path.isfile(os.path.join(directory_path, file))
             ]
 
-        return {
-            "content": [
-                {
-                    "type": "list",
-                    "items": file_list
-                }
-            ]
-        }
+        return json.dumps(file_list)
     except FileNotFoundError:
         raise RuntimeError(f"Directory not found: {directory_path}")
     except Exception as e:

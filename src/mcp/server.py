@@ -9,6 +9,7 @@ from mcp.tools.read_file import read_file_tool, read_file_metadata
 from mcp.tools.write_file import write_file_tool, write_file_metadata
 from mcp.tools.run_command import run_command_tool, run_command_metadata
 from mcp.tools.list_files import list_files_tool, list_files_metadata
+from mcp.tools.ralph import ralph, ralph_metadata
 
 class MCPServer:
     """Simple MCP server implementation"""
@@ -114,9 +115,6 @@ class MCPServer:
                 except json.JSONDecodeError:
                     continue
 
-                # Log the incoming request for debugging
-                logger.debug(f"Received request: {request}")
-
                 # Handle the request
                 response = await self.handle_request(request)
 
@@ -183,6 +181,14 @@ def main():
         tool_function=list_files_tool,
         description=list_files_metadata["description"],
         input_schema=list_files_metadata["inputSchema"]
+    )
+
+    # Register ralph tool
+    server.register_tool(
+        name=ralph_metadata["name"],
+        tool_function=ralph,
+        description=ralph_metadata["description"],
+        input_schema=ralph_metadata["inputSchema"]
     )
 
     asyncio.run(server.run())

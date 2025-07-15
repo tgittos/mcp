@@ -12,6 +12,7 @@ from mcp.client import MCPClient
 
 dotenv.load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+logger.remove()
 logger.add(sys.stderr, level="INFO", format="{time} {level} {message}")
 
 
@@ -52,23 +53,29 @@ class Ralph:
                 {"role": "user", "content": self.message}
             ]
 
+            logger.debug(f"Ralph: {self.agent}")
+            logger.debug(f"User message: {self.message}")
+
             response = llm_completion(messages, functions=formatted_tools)
 
             while response.function_call:
                 function_call = response.function_call
+
+                messages.append(response.model_dump())
+
                 function_name = function_call.name
                 arguments = json.loads(function_call.arguments) if isinstance(function_call.arguments, str) else function_call.arguments
 
-                if function_name and arguments:
-                    logger.info(f"Function call detected: {function_name} with arguments {arguments}")
+                logger.info(f"Calling function: {function_name} with arguments: {arguments}")
 
-                    # Invoke the tool via MCP client
+                if function_name and arguments:
+                    
                     tool_response = await self.mcp_client.call_tool(function_name, arguments)
-                    tool_content = tool_response.get("result", {}).get("content", [])
+                    tool_content = tool_response.get("result", {})
 
                     messages.append({
                         "role": "assistant",
-                        "content": tool_content if tool_content else "Tool executed successfully."
+                        "content": tool_content if isinstance(tool_content, str) else json.dumps(tool_content)
                     })
 
                     response = llm_completion(
@@ -78,7 +85,7 @@ class Ralph:
                 else:
                     logger.error("Invalid function call structure in response.")
             else:
-                print(f"LLM response: {response.content}")
+                logger.info(f"Assistant: {response.content if response.content else 'No content returned from LLM.'}")
                 messages.append({
                     "role": "assistant",
                     "content": response.content if response.content else "No content returned from LLM."
@@ -98,7 +105,6 @@ def main():
             agent = f.read()
 
     # start the MCP server in a separate process
-    logger.info("Starting MCP server...")
     mcp_server_process = subprocess.Popen(
         [sys.executable, "src/mcp/server.py"],
         stdin=subprocess.PIPE,
@@ -107,7 +113,6 @@ def main():
     )
 
     ralph = Ralph(agent, message, server_stdin=mcp_server_process.stdin, server_stdout=mcp_server_process.stdout)
-    logger.info("Executing Ralph with provided prompt...")
     asyncio.run(ralph.execute())
 
     mcp_server_process.terminate()

@@ -35,9 +35,6 @@ class MCPClient:
         # Strip the response
         response_line = response_line.strip()
 
-        # Log the response for debugging
-        logger.info(f"Received response: {response_line}")
-
         return json.loads(response_line)
 
     async def list_tools(self) -> Dict[str, Any]:
