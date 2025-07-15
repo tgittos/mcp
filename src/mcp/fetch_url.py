@@ -19,6 +19,11 @@ class HTMLStripper(HTMLParser):
         self.reset()
         self.fed = []
 
+    def reset(self):
+        """Reset the parser state"""
+        super().reset()
+        self.fed = []
+
     def handle_data(self, d):
         self.fed.append(d)
 
@@ -26,7 +31,10 @@ class HTMLStripper(HTMLParser):
         return ''.join(self.fed)
 
     def strip_html(self, html):
+        """Strip HTML tags and return plain text"""
+        self.reset()  # Reset state before processing
         self.feed(html)
+        self.close()  # Close the parser
         return self.get_data()
 
 
@@ -37,7 +45,7 @@ class MCPServer:
         self.tools = {
             "fetch_url": {
                 "name": "fetch_url",
-                "description": "Fetch content from a URL and return it as UTF-8 text",
+                "description": "Fetch content from a URL, strip HTML tags, and return it as plain UTF-8 text",
                 "inputSchema": {
                     "type": "object",
                     "properties": {

@@ -5,7 +5,6 @@ A collection of artisanal, small batch hand crafted MCP servers
 
 ```
 {
-
   "mcpServers": {
     "fetch_url": {
       "command": "~/.local/bin/uv",
