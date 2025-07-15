@@ -8,8 +8,7 @@ from mcp.tools.fetch_url import fetch_url_tool, fetch_url_metadata
 from mcp.tools.read_file import read_file_tool, read_file_metadata
 from mcp.tools.write_file import write_file_tool, write_file_metadata
 from mcp.tools.run_command import run_command_tool, run_command_metadata
-
-logger.add(sys.stderr, level="INFO", format="{time} {level} {message}")
+from mcp.tools.list_files import list_files_tool, list_files_metadata
 
 class MCPServer:
     """Simple MCP server implementation"""
@@ -115,8 +114,14 @@ class MCPServer:
                 except json.JSONDecodeError:
                     continue
 
+                # Log the incoming request for debugging
+                logger.debug(f"Received request: {request}")
+
                 # Handle the request
                 response = await self.handle_request(request)
+
+                # Log the response for debugging
+                logger.debug(f"Sending response: {response}")
 
                 # Send response to stdout (if not None)
                 if response is not None:
@@ -170,6 +175,14 @@ def main():
         tool_function=run_command_tool,
         description=run_command_metadata["description"],
         input_schema=run_command_metadata["inputSchema"]
+    )
+
+    # Register list_files tool
+    server.register_tool(
+        name=list_files_metadata["name"],
+        tool_function=list_files_tool,
+        description=list_files_metadata["description"],
+        input_schema=list_files_metadata["inputSchema"]
     )
 
     asyncio.run(server.run())
