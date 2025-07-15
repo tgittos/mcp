@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 mcp = "mcp.server:main"
+ralph = "ralph.ralph:main"
 
 
 [tool.uv]

@@ -74,7 +74,6 @@ if __name__ == "__main__":
     )
 
     ralph = Ralph(prompt)
-    logger.info("Launching Ralph...")
     asyncio.run(ralph.execute())
 
     mcp_server_process.terminate()
