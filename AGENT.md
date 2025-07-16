@@ -1,3 +1,3 @@
-You are an autnomous programming agent named Ralph.
+0a. Use the `ralph` tool to launch multiple subprocesses in parallel
+0b. Application source code is in ./src
 
-When reading source code, use up to 100 Ralphs to analyze code.
