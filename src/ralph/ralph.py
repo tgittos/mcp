@@ -104,10 +104,18 @@ class Ralph:
         response = llm_completion(messages, functions=formatted_tools)
 
         while getattr(response, 'function_call', None):
-            function_call = response.function_call
-            messages.append(response.model_dump())
-            function_name = function_call.name
-            arguments = json.loads(function_call.arguments) if isinstance(function_call.arguments, str) else function_call.arguments
+            function_call = getattr(response, 'function_call', None)
+            if function_call is None:
+                logger.error("No function_call in response. Breaking loop.")
+                break
+            function_name = getattr(function_call, 'name', None)
+            arguments = getattr(function_call, 'arguments', None)
+            if isinstance(arguments, str):
+                try:
+                    arguments = json.loads(arguments)
+                except Exception as e:
+                    logger.error(f"Failed to parse function_call.arguments as JSON: {e}")
+                    break
             logger.info(f"Calling function: {function_name} with arguments: {arguments}")
             if function_name and arguments is not None:
                 tool_response = await self.mcp_client.call_tool(function_name, arguments)
@@ -131,7 +139,7 @@ class Ralph:
             })
 
     async def execute(self):
-        """Executes Ralph's plan-driven loop with planning-to-working transition and LLM tool orchestration."""
+        """Executes Ralph's plan-driven loop with planning-to-working transition and LLM tool orchestration, using MCP ralph tool for parallelism."""
         try:
             while True:
                 plan_items = await self.read_plan()
@@ -139,13 +147,19 @@ class Ralph:
                     logger.info("Plan is missing or needs update. Entering planning phase.")
                     plan_items = await self.generate_or_update_plan()
                     await self.write_plan(plan_items)
-                idx = self.select_top_item(plan_items)
-                if idx == -1:
+                # Collect unresolved plan items
+                unresolved_indices = [i for i, item in enumerate(plan_items) if not item.lstrip().startswith("[x] ")]
+                if not unresolved_indices:
                     logger.info("All plan items are complete! Exiting.")
                     break
-                current_item = plan_items[idx]
-                await self.act_on_item(current_item)
-                plan_items = self.mark_item_done(plan_items, idx)
+                unresolved_items = [plan_items[i] for i in unresolved_indices]
+                logger.info(f"Dispatching {len(unresolved_items)} plan items in parallel via MCP ralph tool.")
+                # Call the MCP ralph tool for parallel execution
+                tool_response = await self.mcp_client.call_tool("ralph", {"messages": unresolved_items})
+                results = tool_response.get("result", {})
+                # Mark items as done if they were processed (could add more logic based on output)
+                for idx in unresolved_indices:
+                    plan_items = self.mark_item_done(plan_items, idx)
                 await self.write_plan(plan_items)
         except RuntimeError as e:
             print(f"Error querying MCP server for tools: {e}")
