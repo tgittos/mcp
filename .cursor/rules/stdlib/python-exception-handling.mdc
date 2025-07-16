@@ -1,0 +1,37 @@
+# Python Exception Handling Best Practices
+
+<rule>
+name: python_exception_handling
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Always catch specific exceptions, not bare 'except:' (see PEP 8).
+      - Use 'finally' for cleanup actions.
+      - Avoid using exceptions for control flow.
+      - Log exceptions with context.
+examples:
+  - input: |
+      try:
+          risky()
+      except:
+          pass
+      try:
+          foo()
+      except Exception:
+          pass
+    output: |
+      try:
+          risky()
+      except ValueError as e:
+          logger.error(f"Value error: {e}")
+      try:
+          foo()
+      except Exception as e:
+          logger.error(f"Exception: {e}")
+metadata:
+  priority: high
+  version: 1.1
+</rule>

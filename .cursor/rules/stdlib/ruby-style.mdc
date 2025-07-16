@@ -1,0 +1,66 @@
+<rule>
+name: ruby-style
+scope: '*.rb'
+description: |
+  Enforce idiomatic Ruby style and formatting for all Ruby files. This includes conventions for indentation, whitespace, naming, and code layout.
+
+recommendations:
+  - Use two spaces for indentation, never tabs.
+  - Limit lines to a maximum of 100 characters.
+  - Use snake_case for method and variable names.
+  - Use CamelCase for class and module names.
+  - Avoid unnecessary whitespace.
+  - Prefer single quotes for strings unless string interpolation or escape sequences are needed.
+  - Omit parentheses for method calls with no arguments.
+  - Use `end` to close all class, module, and method definitions.
+  - Place the `private` and `protected` keywords at the appropriate indentation level.
+  - Avoid trailing whitespace at the end of lines.
+  - Use empty lines to break up methods within a class.
+
+examples:
+  - input: |
+      class MyClass
+        def my_method
+          puts 'Hello, world!'
+        end
+      end
+    output: "Correct Ruby style"
+  - input: |
+      class my_class
+      def myMethod()
+        puts "Hello, world!"
+      end
+      end
+    output: "Incorrect Ruby style: naming, indentation, and string usage are not idiomatic."
+
+## Linting and Formatting
+
+- Use RuboCop to enforce Ruby style and formatting.
+- All code must pass RuboCop checks before merging.
+- RuboCop configuration should be committed to the repository (`.rubocop.yml`).
+- Run RuboCop automatically in CI.
+
+## Naming Conventions
+
+- Follow the Ruby Style Guide for naming classes, modules, methods, and variables.
+- Use snake_case for methods and variables, CamelCase for classes and modules.
+- Acronyms should be all uppercase or follow project conventions.
+
+## Style Guide Reference
+
+- Adhere to the [Ruby Style Guide](https://rubystyle.guide/).
+- Use RuboCop as the automated enforcer of these guidelines.
+
+## RuboCop Configuration
+
+- Commit a `.rubocop.yml` file to the repository to configure style rules.
+- Run RuboCop in CI to enforce style compliance.
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>
+description:
+globs:
+alwaysApply: false
+---

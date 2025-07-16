@@ -1,0 +1,27 @@
+---
+# Python Logging Best Practices
+
+<rule>
+name: python_logging
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Use the logging module for diagnostics and debugging, not print().
+      - Configure logging levels appropriately (INFO, DEBUG, ERROR, etc.).
+      - Avoid logging sensitive information.
+      - Use structured logging where possible.
+examples:
+  - input: |
+      print("Error occurred")
+      print("Value:", value)
+    output: |
+      import logging
+      logging.error("Error occurred")
+      logging.info(f"Value: {value}")
+metadata:
+  priority: medium
+  version: 1.1
+---

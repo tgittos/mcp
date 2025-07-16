@@ -1,0 +1,31 @@
+# Python Dependency Management Best Practices
+
+<rule>
+name: python_dependency_management
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Use requirements.txt, pyproject.toml, or tools like pip-tools/poetry to specify dependencies.
+      - Pin dependency versions to ensure reproducibility.
+      - Use virtual environments to isolate dependencies.
+      - Regularly update and audit dependencies for security.
+examples:
+  - input: |
+      # requirements.txt
+      requests
+      # pyproject.toml
+      [tool.poetry.dependencies]
+      requests = "^2.31.0"
+    output: |
+      # requirements.txt
+      requests==2.31.0
+      # pyproject.toml
+      [tool.poetry.dependencies]
+      requests = "2.31.0"
+metadata:
+  priority: medium
+  version: 1.1
+</rule>

@@ -1,0 +1,41 @@
+<rule>
+name: ruby-dependencies
+scope: '*.rb'
+description: |
+  Recommend best practices for managing dependencies in Ruby projects, including Gemfile usage, version pinning, and keeping dependencies up to date.
+
+recommendations:
+  - Always use a `Gemfile` and `Gemfile.lock` to specify and lock dependencies.
+  - Use Bundler (`bundle install`, `bundle update`) to manage gems and ensure consistent environments.
+  - Regularly check for vulnerable or outdated gems using `bundle audit` or similar tools.
+  - Avoid specifying overly broad version constraints; prefer semantic versioning.
+  - Remove unused gems from the Gemfile to minimize attack surface and bloat.
+
+## Dependency Updates
+
+- Regularly update dependencies to patch vulnerabilities and receive improvements.
+- Use tools like Dependabot or similar to automate dependency update PRs.
+
+## Removing Unused Gems
+
+- Regularly audit the Gemfile and remove gems that are no longer needed.
+- Keep the dependency list minimal to reduce maintenance and security risks.
+
+examples:
+  - input: |
+      # Gemfile
+      gem 'rails', '~> 7.0.0'
+    output: "Correct: version constraint specified."
+  - input: |
+      # Gemfile
+      gem 'some-old-gem'
+    output: "Potential issue: check if gem is maintained and specify a version."
+
+metadata:
+  priority: medium
+  version: 1.0
+</rule>
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,26 @@
+# Python Test Coverage Best Practices
+
+<rule>
+name: python_test_coverage
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - All new code should be covered by automated tests.
+      - Test functions should be named test_* and reside in test modules or directories.
+      - Use pytest or unittest for writing tests.
+      - Use coverage.py to measure and enforce code coverage (e.g., >90%).
+examples:
+  - input: |
+      def add(a, b):
+          return a + b
+      # no tests
+    output: |
+      def test_add():
+          assert add(2, 3) == 5
+metadata:
+  priority: high
+  version: 1.1
+</rule>

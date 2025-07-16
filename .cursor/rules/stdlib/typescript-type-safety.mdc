@@ -1,0 +1,37 @@
+<rule>
+name: typescript-type-safety
+scope:
+  - "**/*.ts"
+description: |
+  Enforces strong type safety and best practices for type annotations in Typescript files.
+recommendations:
+  - Always enable strict type checking (strict: true in tsconfig).
+  - Prefer interfaces for object shapes, but use type aliases for unions/intersections.
+  - Avoid using 'any'. Use unknown or a more specific type instead.
+  - Use explicit type annotations for function parameters and return types, except for trivial arrow functions.
+  - Enable and respect strict null checks. Avoid using null unless necessary; prefer undefined.
+  - Use enums or union types for sets of related constants.
+  - Prefer readonly for immutable properties and arrays.
+  - Use Record, Partial, Pick, and other utility types for type transformations.
+  - Avoid type assertions (as) unless absolutely necessary.
+  - Never suppress type errors with @ts-ignore unless there is no alternative, and always document why.
+rationale: |
+  Strong type safety prevents bugs, improves code clarity, and leverages Typescript's strengths. Avoiding 'any' and using strict checks ensures safer, more maintainable code.
+examples:
+  - input: |
+      function getUser(id) {
+        return fetch(`/api/user/${id}`)
+      }
+    output: |
+      interface User {
+        id: string;
+        name: string;
+      }
+      async function getUser(id: string): Promise<User> {
+        // ...
+      }
+</rule>
+description:
+globs:
+alwaysApply: false
+---

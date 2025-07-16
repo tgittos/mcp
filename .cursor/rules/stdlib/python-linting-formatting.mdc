@@ -1,0 +1,28 @@
+# Python Linting and Formatting Best Practices
+
+<rule>
+name: python_linting_formatting
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Use automated tools like Black, Ruff, or Flake8 to enforce code style and catch errors.
+      - Code should be formatted with Black and pass linting with Ruff or Flake8 before merging.
+      - Fix all reported issues before committing code.
+      - Integrate linting and formatting checks into CI and pre-commit hooks.
+examples:
+  - input: |
+      def foo( x= 1 ):
+          return  x+1
+      def bar(): print('bad')
+    output: |
+      def foo(x=1):
+          return x + 1
+      def bar():
+          print("bad")
+metadata:
+  priority: high
+  version: 1.1
+</rule>

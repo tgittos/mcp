@@ -1,0 +1,28 @@
+# Python Type Annotations Best Practices
+
+<rule>
+name: python_type_annotations
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Use type annotations for all function and method arguments and return values (see PEP 484).
+      - Use tools like mypy or pyright to check type correctness.
+      - Prefer built-in types from typing (e.g., List, Dict, Optional).
+examples:
+  - input: |
+      def add(a, b):
+          return a + b
+      def foo(x: int, y):
+          return x + y
+    output: |
+      def add(a: int, b: int) -> int:
+          return a + b
+      def foo(x: int, y: int) -> int:
+          return x + y
+metadata:
+  priority: high
+  version: 1.1
+</rule>

@@ -1,0 +1,37 @@
+# Python Docstrings Best Practices
+
+<rule>
+name: python_docstrings
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Every public module, class, and function should have a docstring (see PEP 257).
+      - Use triple double quotes for docstrings.
+      - The first line should be a short summary, followed by a blank line and further details if needed.
+examples:
+  - input: |
+      def foo(x):
+          return x * 2
+      class Bar:
+          pass
+    output: |
+      def foo(x):
+          """Multiply x by 2.
+
+          Args:
+              x (int): The value to double.
+
+          Returns:
+              int: The doubled value.
+          """
+          return x * 2
+      class Bar:
+          """Example class docstring."""
+          pass
+metadata:
+  priority: high
+  version: 1.1
+</rule>

@@ -1,0 +1,64 @@
+<rule>
+name: ruby-testing
+scope: '*.rb'
+description: |
+  Recommend best practices for writing and organizing tests in Ruby, including test naming, structure, and use of common frameworks.
+
+recommendations:
+  - Use RSpec or Minitest for testing Ruby code.
+  - Place tests in a `spec/` or `test/` directory, mirroring the structure of the code under test.
+  - Name test files with `_spec.rb` (RSpec) or `_test.rb` (Minitest) suffixes.
+  - Write descriptive test names and use `describe`/`context`/`it` blocks (RSpec) or `def test_...` methods (Minitest).
+  - Keep tests isolated and independent from each other.
+  - Use test doubles (mocks, stubs) where appropriate.
+  - Run tests automatically in CI pipelines.
+
+examples:
+  - input: |
+      # spec/my_class_spec.rb
+      RSpec.describe MyClass do
+        it 'does something' do
+          expect(subject.do_something).to eq(true)
+        end
+      end
+    output: "Correct RSpec test structure."
+  - input: |
+      # test/my_class_test.rb
+      class MyClassTest < Minitest::Test
+        def test_does_something
+          assert_equal true, MyClass.new.do_something
+        end
+      end
+    output: "Correct Minitest test structure."
+
+## Test Coverage and CI
+
+- All code must be covered by automated tests (unit, integration, etc.).
+- Minimum test coverage: 90% (enforced via SimpleCov or similar).
+- Use SimpleCov to measure and report coverage.
+- All tests must pass in CI before merging code.
+- Integrate tests with CI/CD pipelines (e.g., GitHub Actions, CircleCI).
+
+## Test Coverage Reporting
+
+- Use SimpleCov to measure and report test coverage.
+- Coverage reports should be generated and checked in CI.
+
+## Continuous Integration
+
+- All tests and linters must run in CI/CD pipelines (e.g., GitHub Actions, CircleCI).
+- Code must not be merged unless all CI checks pass.
+
+## Integration and System Tests
+
+- Include integration and system tests in addition to unit tests.
+- Ensure all major user flows are covered by automated tests.
+
+metadata:
+  priority: medium
+  version: 1.0
+</rule>
+description:
+globs:
+alwaysApply: false
+---

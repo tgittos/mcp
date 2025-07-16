@@ -16,9 +16,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 logger.remove()
 logger.add(sys.stderr, level="INFO", format="{time} {level} {message}")
 
-
 def llm_completion(messages, model="gpt-4o-mini", temperature=0.0, functions=[]):
-    """Completes a prompt using the LLM, specifying available tools."""
     response = client.chat.completions.create(
         model=model,
         messages=messages,
@@ -29,140 +27,192 @@ def llm_completion(messages, model="gpt-4o-mini", temperature=0.0, functions=[])
 
 class Ralph:
     def __init__(self, agent: str, message: str, server_stdin=None, server_stdout=None):
-        self.messages = []
         self.agent = agent
         self.message = message
         self.mcp_client = MCPClient(reader=server_stdout, writer=server_stdin)
         self.plan_file = "fix_plan.md"
+        self.impl_plan_file = "IMPLEMENTATION_PLAN.md"
+
+    async def read_file(self, path: str) -> str:
+        try:
+            resp = await self.mcp_client.call_tool("read_file", {"path": path})
+            return resp.get("result", {}).get("content", "")
+        except Exception as e:
+            logger.warning(f"Could not read {path}: {e}")
+            return ""
 
     async def read_plan(self) -> List[str]:
-        """Reads the plan file and returns a list of plan items (lines)."""
-        try:
-            response = await self.mcp_client.call_tool("read_file", {"path": self.plan_file})
-            content = response.get("result", {}).get("content", "")
-            lines = [line.strip() for line in content.splitlines() if line.strip()]
-            return lines
-        except Exception as e:
-            logger.warning(f"Plan file not found or error reading: {e}. Creating new plan file.")
-            await self.write_plan([])
-            return []
+        content = await self.read_file(self.plan_file)
+        return [line.strip() for line in content.splitlines() if line.strip()]
 
     async def write_plan(self, items: List[str]):
-        """Writes the plan items back to the plan file."""
         content = "\n".join(items) + "\n"
         await self.mcp_client.call_tool("write_file", {"path": self.plan_file, "content": content})
 
     def select_top_item(self, items: List[str]) -> int:
-        """Selects the index of the top unresolved item (not marked as done)."""
         for idx, item in enumerate(items):
             if not item.lstrip().startswith("[x] "):
                 return idx
         return -1
 
     def mark_item_done(self, items: List[str], idx: int) -> List[str]:
-        """Marks the item at idx as done."""
         if 0 <= idx < len(items):
             item = items[idx]
             if not item.lstrip().startswith("[x] "):
-                # Replace leading '- ' or '* ' or nothing with '[x] '
                 stripped = item.lstrip('-* ').strip()
                 items[idx] = f"[x] {stripped}"
         return items
 
     def plan_needs_update(self, items: List[str]) -> bool:
-        """Stub: Returns True if the plan needs to be updated (e.g., empty or stale)."""
-        return not items  # For now, only checks if plan is empty
+        return not items or all(item.lstrip().startswith("[x] ") for item in items)
 
-    async def generate_or_update_plan(self) -> List[str]:
-        """Stub: Generates or updates the plan. For now, returns a placeholder plan."""
-        logger.info("Planning phase: generating a new plan.")
-        # In a real implementation, this would analyze the codebase, etc.
-        return ["- Implement feature X", "- Fix bug Y", "- Refactor module Z"]
+    async def gather_context(self, narrow_to_files: List[str] = None) -> str:
+        context_parts = []
+        paths = [self.plan_file, self.impl_plan_file]
 
-    async def act_on_item(self, item: str):
-        """Uses the LLM to reason about the plan item and call tools as needed."""
-        # Discover available tools
-        tools_response = await self.mcp_client.list_tools()
-        tools = tools_response.get("result", {}).get("tools", [])
-        formatted_tools = [
-            {
-                "name": tool["name"],
-                "description": tool["description"],
-                "parameters": tool["inputSchema"]
-            } for tool in tools
-        ]
-        logger.info(f"Available tools: {', '.join(tool['name'] for tool in formatted_tools)}")
+        for path in paths:
+            content = await self.read_file(path)
+            if content:
+                context_parts.append(f"--- {path} ---\n{content}")
 
+        try:
+            resp = await self.mcp_client.call_tool("list_files", {"path": "specs"})
+            for f in resp.get("result", {}).get("files", []):
+                if f.endswith(".md") and (not narrow_to_files or f"specs/{f}" in narrow_to_files):
+                    spec_content = await self.read_file(f"specs/{f}")
+                    context_parts.append(f"--- specs/{f} ---\n{spec_content}")
+        except Exception as e:
+            logger.warning(f"Failed to load specs: {e}")
+
+        return "\n\n".join(context_parts)
+
+    async def spawn_subralphs(self, jobs: list[dict]) -> list[dict]:
+        return await asyncio.gather(*[
+            self.mcp_client.call_tool("ralph", {
+                "messages": [job["task"]],
+                "context": job.get("context", ""),
+                "metadata": job.get("metadata", {})
+            }) for job in jobs
+        ])
+
+    async def verify_code(self) -> bool:
+        lint = subprocess.run(["ruff", "."], capture_output=True, text=True)
+        if lint.returncode != 0:
+            logger.error("Ruff failed:\n" + lint.stdout)
+            return False
+
+        test = subprocess.run(["pytest"], capture_output=True, text=True)
+        if test.returncode != 0:
+            logger.error("Pytest failed:\n" + test.stdout)
+            return False
+
+        return True
+
+    async def plan_subtasks(self, goal: str, context: str) -> List[str]:
         messages = [
             {"role": "system", "content": self.agent},
-            {"role": "user", "content": item}
+            {"role": "user", "content": f"Given the goal:\n{goal}\n\nAnd context:\n{context}\n\nBreak the goal into specific implementation subtasks. Return a bullet list."}
         ]
+        reply = llm_completion(messages)
+        content = reply.get("content", "")
+        return [line.strip("-* ").strip() for line in content.splitlines() if line.strip().startswith(("-", "*"))]
 
-        logger.debug(f"Ralph: {self.agent}")
-        logger.debug(f"Plan item: {item}")
+    async def git_commit_and_push(self, message: str):
+        subprocess.run(["git", "add", "-A"])
+        subprocess.run(["git", "commit", "-m", message])
+        subprocess.run(["git", "push"])
 
-        response = llm_completion(messages, functions=formatted_tools)
-
-        while getattr(response, 'function_call', None):
-            function_call = getattr(response, 'function_call', None)
-            if function_call is None:
-                logger.error("No function_call in response. Breaking loop.")
-                break
-            function_name = getattr(function_call, 'name', None)
-            arguments = getattr(function_call, 'arguments', None)
-            if isinstance(arguments, str):
-                try:
-                    arguments = json.loads(arguments)
-                except Exception as e:
-                    logger.error(f"Failed to parse function_call.arguments as JSON: {e}")
-                    break
-            logger.info(f"Calling function: {function_name} with arguments: {arguments}")
-            if function_name and arguments is not None:
-                tool_response = await self.mcp_client.call_tool(function_name, arguments)
-                tool_content = tool_response.get("result", {})
-                messages.append({
-                    "role": "assistant",
-                    "content": tool_content if isinstance(tool_content, str) else json.dumps(tool_content)
-                })
-                response = llm_completion(
-                    messages=messages,
-                    functions=formatted_tools
-                )
-            else:
-                logger.error("Invalid function call structure in response.")
-                break
+    async def git_tag_and_push(self):
+        tags = subprocess.run(["git", "tag"], capture_output=True, text=True).stdout.splitlines()
+        if not tags:
+            next_tag = "0.0.0"
         else:
-            logger.info(f"Assistant: {response.content if response.content else 'No content returned from LLM.'}")
-            messages.append({
-                "role": "assistant",
-                "content": response.content if response.content else "No content returned from LLM."
-            })
+            parts = [int(p) for p in tags[-1].strip().split(".")]
+            parts[-1] += 1
+            next_tag = ".".join(str(p) for p in parts)
+        subprocess.run(["git", "tag", next_tag])
+        subprocess.run(["git", "push", "--tags"])
+
+    async def plan_mode(self):
+        logger.info("Running Ralph in PLAN mode")
+        context = await self.gather_context()
+
+        logger.info("Dispatching sub-Ralphs to analyze specs and implementation...")
+
+        spec_jobs = [
+            {"task": "Extract all requirements from spec specs/" + f, "context": context}
+            for f in os.listdir("specs") if f.endswith(".md")
+        ]
+        impl_jobs = [
+            {"task": "Analyze all implemented features in src/" + f, "context": context}
+            for f in os.listdir("src") if f.endswith(".py")
+        ]
+        await self.spawn_subralphs(spec_jobs + impl_jobs)
+
+        planning_messages = [
+            {"role": "system", "content": self.agent},
+            {"role": "user", "content": f"Study the specs and implementation code. Return a prioritized task list for fix_plan.md.
+
+Context:
+{context}"}
+        ]
+        reply = llm_completion(planning_messages)
+        content = reply.get("content", "")
+        new_items = [line.strip("-* ").strip() for line in content.splitlines() if line.strip().startswith(("-", "*"))]
+
+        existing_items = await self.read_plan()
+        completed_items = [item for item in existing_items if item.startswith("[x] ")]
+        incomplete_items = [item for item in existing_items if not item.startswith("[x] ")]
+
+        merged = completed_items[:]
+        seen = set(line.lstrip("[x] -* ").strip() for line in completed_items + incomplete_items)
+        for item in new_items:
+            if item not in seen:
+                merged.append(item)
+                seen.add(item)
+
+        await self.write_plan(merged)
+        logger.info("Plan written to fix_plan.md")
 
     async def execute(self):
-        """Executes Ralph's plan-driven loop with planning-to-working transition and LLM tool orchestration, using MCP ralph tool for parallelism."""
         try:
-            while True:
+            plan_items = await self.read_plan()
+            if self.plan_needs_update(plan_items):
+                logger.info("Plan missing, empty, or complete. Triggering plan mode.")
+                await self.plan_mode()
                 plan_items = await self.read_plan()
-                if self.plan_needs_update(plan_items):
-                    logger.info("Plan is missing or needs update. Entering planning phase.")
-                    plan_items = await self.generate_or_update_plan()
-                    await self.write_plan(plan_items)
-                # Collect unresolved plan items
-                unresolved_indices = [i for i, item in enumerate(plan_items) if not item.lstrip().startswith("[x] ")]
-                if not unresolved_indices:
-                    logger.info("All plan items are complete! Exiting.")
-                    break
-                unresolved_items = [plan_items[i] for i in unresolved_indices]
-                logger.info(f"Dispatching {len(unresolved_items)} plan items in parallel via MCP ralph tool.")
-                # Call the MCP ralph tool for parallel execution
-                tool_response = await self.mcp_client.call_tool("ralph", {"messages": unresolved_items})
-                results = tool_response.get("result", {})
-                # Mark items as done if they were processed (could add more logic based on output)
-                for idx in unresolved_indices:
-                    plan_items = self.mark_item_done(plan_items, idx)
+
+            idx = self.select_top_item(plan_items)
+            if idx == -1:
+                logger.info("All plan items complete.")
+                return
+
+            goal = plan_items[idx]
+            logger.info(f"Working on: {goal}")
+
+            context = await self.gather_context()
+
+            
+
+            logger.info("Creating subtask plan...")
+            sub_tasks = await self.plan_subtasks(goal, context)
+            if not sub_tasks:
+                logger.warning("No subtasks generated.")
+                return
+
+            logger.info("Dispatching sub-Ralphs to implement subtasks...")
+            await self.spawn_subralphs([
+                {"task": task, "context": context} for task in sub_tasks
+            ])
+
+            if await self.verify_code():
+                plan_items = self.mark_item_done(plan_items, idx)
                 await self.write_plan(plan_items)
+                await self.git_commit_and_push(f"Completed: {goal}")
+                await self.git_tag_and_push()
+
         except RuntimeError as e:
-            print(f"Error querying MCP server for tools: {e}")
+            logger.error(f"Runtime error: {e}")
 
 def main():
     if len(sys.argv) < 2:
@@ -175,7 +225,6 @@ def main():
         with open("AGENT.md", "r") as f:
             agent = f.read()
 
-    # start the MCP server in a separate process
     mcp_server_process = subprocess.Popen(
         [sys.executable, "src/mcp/server.py"],
         stdin=subprocess.PIPE,

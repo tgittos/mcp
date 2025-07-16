@@ -1,0 +1,38 @@
+<rule>
+name: typescript-error-handling
+scope:
+  - "**/*.ts"
+description: |
+  Documents best practices for error handling in Typescript code, including use of try/catch, error types, and avoiding silent failures.
+recommendations:
+  - Always handle errors explicitly; never leave catch blocks empty.
+  - Use try/catch for async/await and promise-based code where errors may occur.
+  - Prefer custom error classes extending Error for application-specific errors.
+  - Always log or propagate errors; never silently ignore them.
+  - Use type guards to check error types in catch blocks.
+  - Avoid using 'any' for error types; prefer unknown and narrow as needed.
+  - Document expected error cases in function signatures and comments.
+  - Use Result or Either types for functions that may fail, where appropriate.
+rationale: |
+  Proper error handling prevents silent failures, improves debuggability, and ensures robust applications. Using strong types for errors leverages Typescript's safety features.
+examples:
+  - input: |
+      try {
+        await doThing()
+      } catch (e) {
+      }
+    output: |
+      try {
+        await doThing();
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          console.error(e.message);
+        } else {
+          console.error('Unknown error', e);
+        }
+      }
+</rule>
+description:
+globs:
+alwaysApply: false
+---

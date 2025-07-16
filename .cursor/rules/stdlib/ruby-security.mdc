@@ -1,0 +1,43 @@
+<rule>
+name: ruby-security
+scope: '*.rb'
+description: |
+  Recommend best practices for writing secure Ruby code, including input validation, safe use of dynamic evaluation, and avoiding common vulnerabilities.
+
+recommendations:
+  - Never use `eval` on untrusted input.
+  - Validate and sanitize all user input.
+  - Use parameterized queries to prevent SQL injection.
+  - Avoid using backticks or `%x{}` for shell execution with user input.
+  - Use secure random number generation (`SecureRandom`).
+  - Keep dependencies up to date and monitor for vulnerabilities.
+  - Avoid exposing sensitive information in error messages or logs.
+
+examples:
+  - input: |
+      eval(user_input)
+    output: "Insecure: never use eval on untrusted input."
+  - input: |
+      User.where('email = ?', params[:email])
+    output: "Secure: parameterized query prevents SQL injection."
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>
+description:
+globs:
+alwaysApply: false
+---
+
+## Security Best Practices
+
+- Use Brakeman or similar static analysis tools to detect security vulnerabilities.
+- Never commit secrets or credentials to version control; use dotenv, credentials.yml.enc, or environment variables.
+- Follow secure defaults: validate input, escape output, use secure password storage (bcrypt, etc.).
+- Regularly update dependencies to patch known vulnerabilities.
+
+## Security Audits
+
+- Perform regular security audits using automated tools (e.g., Brakeman, bundler-audit).
+- Monitor for new vulnerabilities in dependencies and patch promptly.

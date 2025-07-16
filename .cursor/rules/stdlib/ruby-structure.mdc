@@ -1,0 +1,40 @@
+<rule>
+name: ruby-structure
+scope: '*.rb'
+description: |
+  Recommend best practices for organizing Ruby files and projects, including file naming, directory structure, and code organization.
+
+recommendations:
+  - Name files using snake_case, matching the class or module they define.
+  - Place each class or module in its own file.
+  - Organize related files into directories (e.g., `lib/`, `spec/`, `app/`).
+  - Use `require_relative` for local file dependencies.
+  - Avoid deeply nested directory structures.
+  - Place executable scripts in a `bin/` directory and make them executable.
+  - Keep configuration files (e.g., `.ruby-version`, `.env`) in the project root.
+  - Specify the required Ruby version in `.ruby-version` and in the `Gemfile`.
+  - Ensure all developers and CI environments use the same Ruby version.
+  - Update the Ruby version in all relevant files when upgrading.
+
+examples:
+  - input: |
+      # File: lib/my_class.rb
+      class MyClass
+      end
+    output: "Correct file naming and structure."
+  - input: |
+      # File: myClass.rb
+      class MyClass
+      end
+    output: "Incorrect file naming: should use snake_case."
+
+metadata:
+  priority: medium
+  version: 1.0
+</rule>
+## Project Structure Conventions
+
+- Organize code into `lib/`, `spec/` or `test/`, and `bin/` directories as appropriate.
+- Place configuration files in a `config/` directory.
+- Follow standard Ruby project layout for gems and applications.
+---

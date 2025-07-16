@@ -1,0 +1,33 @@
+# Python Imports Best Practices
+
+<rule>
+name: python_imports
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Group imports in the following order: standard library, third-party, local application/library (see PEP 8).
+      - Use absolute imports whenever possible.
+      - Avoid wildcard imports (from module import *).
+      - Each import should be on its own line.
+      - Use explicit relative imports only within packages.
+      - Use tools like isort to enforce import order.
+examples:
+  - input: |
+      from os import path, system
+      import sys, requests
+      from . import mymodule
+      from module import *
+    output: |
+      import os
+      import sys
+
+      import requests
+
+      from . import mymodule
+metadata:
+  priority: high
+  version: 1.1
+</rule>

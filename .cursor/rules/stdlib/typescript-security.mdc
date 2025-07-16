@@ -1,0 +1,32 @@
+<rule>
+name: typescript-security
+scope:
+  - "**/*.ts"
+description: |
+  Documents best practices for secure Typescript code, including input validation, avoiding dangerous APIs, and safe handling of external data.
+recommendations:
+  - Always validate and sanitize user input, especially before using it in queries or commands.
+  - Never use eval or the Function constructor to execute dynamic code.
+  - Avoid exposing sensitive data (e.g., secrets, tokens) in client-side code.
+  - Use parameterized queries for database access to prevent injection attacks.
+  - Escape output when rendering user data in the DOM.
+  - Prefer strict Content Security Policy (CSP) headers in web applications.
+  - Use HTTPS for all network requests.
+  - Keep dependencies up to date and monitor for vulnerabilities.
+  - Avoid using deprecated or insecure APIs.
+  - Handle authentication and authorization checks on the server side.
+rationale: |
+  Secure Typescript code protects users and systems from common vulnerabilities such as XSS, injection, and data leaks. Following best practices reduces risk and improves trust.
+examples:
+  - input: |
+      // BAD: Using eval with user input
+      eval(userInput);
+    output: |
+      // GOOD: Never use eval. Validate and process input safely.
+      const safeInput = sanitize(userInput);
+      // ...
+</rule>
+description:
+globs:
+alwaysApply: false
+---

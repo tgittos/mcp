@@ -1,0 +1,32 @@
+<rule>
+name: ruby-functional
+scope: '*.rb'
+description: |
+  Recommend best practices for functional programming in Ruby, including the use of blocks, procs, lambdas, and enumerables.
+
+recommendations:
+  - Prefer using blocks, procs, and lambdas for functional patterns.
+  - Use enumerables (`map`, `select`, `reduce`, etc.) for collection transformations.
+  - Avoid mutating state within blocks when possible.
+  - Use `Symbol#to_proc` shorthand (e.g., `array.map(&:to_s)`) for readability.
+  - Chain enumerable methods for concise and expressive code.
+  - Avoid side effects in functional code.
+
+examples:
+  - input: |
+      numbers = [1, 2, 3]
+      squares = numbers.map { |n| n * n }
+    output: "Correct use of map for transformation."
+  - input: |
+      result = []
+      numbers.each { |n| result << n * n }
+    output: "Prefer map over each for transformations."
+
+metadata:
+  priority: low
+  version: 1.0
+</rule>
+description:
+globs:
+alwaysApply: false
+---

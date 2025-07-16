@@ -1,0 +1,31 @@
+# Python Naming Conventions Best Practices
+
+<rule>
+name: python_naming_conventions
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Use snake_case for functions and variable names (see PEP 8).
+      - Use PascalCase for class names.
+      - Use UPPER_CASE for constants.
+      - Avoid single-character variable names except for counters or iterators.
+examples:
+  - input: |
+      def MyFunction():
+          pass
+      class foo_bar:
+          pass
+      MAXVALUE = 10
+    output: |
+      def my_function():
+          pass
+      class FooBar:
+          pass
+      MAX_VALUE = 10
+metadata:
+  priority: high
+  version: 1.1
+</rule>

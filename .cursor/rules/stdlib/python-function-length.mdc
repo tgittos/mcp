@@ -1,0 +1,30 @@
+# Python Function Length Best Practices
+
+<rule>
+name: python_function_length
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Keep functions short and focused on a single responsibility.
+      - If a function exceeds 40 lines, consider refactoring.
+      - Each function should do one thing and do it well.
+examples:
+  - input: |
+      def process_data(data):
+          # 100 lines of code
+          pass
+      def foo():
+          a = 1
+          b = 2
+          return a + b
+    output: |
+      # Refactor into smaller functions, each with a clear purpose.
+      def foo():
+          return 1 + 2
+metadata:
+  priority: medium
+  version: 1.1
+</rule>
