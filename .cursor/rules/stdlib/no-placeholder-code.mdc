@@ -1,0 +1,123 @@
+# No Placeholder Code Rule
+
+<rule>
+name: no-placeholder-code
+description: Ensures Cursor agents never write placeholder code and always provide complete implementations
+filters:
+  # Match code files that might contain placeholders
+  - type: file_extension
+    pattern: "\\.(rb|js|ts|jsx|tsx|py|java|c|cpp|cs|php|go|rs|swift|kt|scala|clj|hs|ml|fs|vb|sql|sh|bash|ps1|yaml|yml|json|xml|html|css|scss|sass|less|vue|svelte|astro|md|txt)$"
+  
+  # Match content that looks like placeholder code
+  - type: content
+    pattern: "(?i)(TODO|FIXME|XXX|HACK|BUG|NOTE|PLACEHOLDER|TBD|TEMP|DUMMY|STUB|SKELETON|EXAMPLE|NOT_IMPLEMENTED|RAISE_NOT_IMPLEMENTED|pass|return None|return null|return undefined|throw new Error|panic!|unimplemented!|todo!|not_implemented!|raise NotImplementedError|raise Exception|assert False|# TODO|// TODO|/* TODO|<!-- TODO|{{.*}}|\\{\\{.*\\}\\}|\\[\\[.*\\]\\]|\\{\\% .* \\%\\})"
+
+actions:
+  - type: reject
+    conditions:
+      - pattern: "(?i)(TODO|FIXME|XXX|HACK|BUG|NOTE|PLACEHOLDER|TBD|TEMP|DUMMY|STUB|SKELETON|EXAMPLE|NOT_IMPLEMENTED|RAISE_NOT_IMPLEMENTED)"
+        message: "Placeholder code detected. Always provide complete implementations instead of TODO comments or placeholder text."
+      
+      - pattern: "(?i)(pass|return None|return null|return undefined|throw new Error|panic!|unimplemented!|todo!|not_implemented!|raise NotImplementedError|raise Exception|assert False)"
+        message: "Incomplete implementation detected. Replace placeholder returns/exceptions with actual implementation."
+      
+      - pattern: "(?i)(# TODO|// TODO|/* TODO|<!-- TODO)"
+        message: "TODO comments are not allowed. Complete the implementation immediately."
+      
+      - pattern: "(?i)(\\{\\{.*\\}\\}|\\[\\[.*\\]\\]|\\{\\% .* \\%\\})"
+        message: "Template placeholders detected. Replace with actual content or complete the template logic."
+
+  - type: suggest
+    message: |
+      When implementing code, follow these guidelines:
+
+      1. **Complete Implementation Required:**
+         - Never use TODO, FIXME, or placeholder comments
+         - Always provide working, executable code
+         - Implement all required functionality immediately
+         - Handle edge cases and error conditions
+
+      2. **Replace Common Placeholders:**
+         - Instead of `pass` → implement the actual logic
+         - Instead of `return None/null/undefined` → return appropriate values
+         - Instead of `raise NotImplementedError` → implement the method
+         - Instead of `throw new Error("Not implemented")` → provide implementation
+
+      3. **Template and Configuration:**
+         - Replace template variables with actual values
+         - Complete configuration files with real settings
+         - Fill in placeholder text with meaningful content
+
+      4. **Error Handling:**
+         - Implement proper error handling instead of placeholder exceptions
+         - Use appropriate error types and messages
+         - Handle edge cases gracefully
+
+      5. **Documentation:**
+         - Write complete documentation, not placeholder text
+         - Provide working examples
+         - Include all necessary details
+
+examples:
+  - input: |
+      def process_data(data):
+          # TODO: Implement data processing
+          pass
+    output: |
+      def process_data(data):
+          if not data:
+              raise ValueError("Data cannot be empty")
+          
+          processed = []
+          for item in data:
+              if isinstance(item, dict):
+                  processed.append(item.get('value', 0))
+              else:
+                  processed.append(item)
+          
+          return sum(processed)
+
+  - input: |
+      function calculateTotal(items) {
+          // TODO: Add calculation logic
+          return null;
+      }
+    output: |
+      function calculateTotal(items) {
+          if (!Array.isArray(items)) {
+              throw new Error('Items must be an array');
+          }
+          
+          return items.reduce((total, item) => {
+              return total + (item.price || 0);
+          }, 0);
+      }
+
+  - input: |
+      class UserService:
+          def get_user(self, user_id):
+              raise NotImplementedError("Method not implemented")
+    output: |
+      class UserService:
+          def __init__(self, database):
+              self.database = database
+          
+          def get_user(self, user_id):
+              if not user_id:
+                  raise ValueError("User ID is required")
+              
+              user = self.database.find_user(user_id)
+              if not user:
+                  raise UserNotFoundError(f"User with ID {user_id} not found")
+              
+              return user
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["implementation", "quality", "completeness"]
+</rule>
+description:
+globs:
+alwaysApply: false
+---

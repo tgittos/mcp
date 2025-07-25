@@ -1,0 +1,108 @@
+<rule>
+name: prefer-existing-libraries
+description: Ensures Cursor agents prefer existing open-source libraries over hand-rolling their own code implementations
+filters:
+  # Match code files that might implement functionality
+  - type: file_extension
+    pattern: "\\.(py|js|ts|java|cpp|c|go|rs|php|rb|cs)$"
+  # Match when implementing new functionality
+  - type: content
+    pattern: "(?i)(import|require|using|from|def|class|function|pub fn|func|public class)"
+  # Match package management files
+  - type: file_extension
+    pattern: "\\.(toml|yaml|yml|json|lock|txt)$"
+  # Match when creating new files
+  - type: event
+    pattern: "file_create"
+
+actions:
+  - type: suggest
+    message: |
+      When implementing functionality, ALWAYS prefer existing open-source libraries over hand-rolling your own code:
+
+      1. **Search First**: Before writing any implementation, search for existing libraries that solve the problem
+         - Check PyPI for Python packages
+         - Check npm for JavaScript/TypeScript packages
+         - Check other language-specific package repositories
+         - Search GitHub for relevant open-source projects
+
+      2. **Evaluate Options**: When multiple libraries exist:
+         - Check popularity (stars, downloads, contributors)
+         - Check maintenance status (last commit, issues, PRs)
+         - Check license compatibility
+         - Check documentation quality
+         - Check test coverage
+
+      3. **Prefer Established Libraries**: Choose libraries that are:
+         - Well-maintained and actively developed
+         - Have good documentation and examples
+         - Have a community around them
+         - Are battle-tested in production
+
+      4. **Only Hand-Roll When Necessary**: Only implement from scratch when:
+         - No suitable library exists
+         - All existing libraries have critical issues
+         - The functionality is truly unique to your use case
+         - Performance requirements cannot be met by existing solutions
+         - Security requirements demand custom implementation
+
+      5. **Document Your Choice**: When you do choose to hand-roll:
+         - Document why existing libraries were unsuitable
+         - Reference the libraries you evaluated
+         - Explain the trade-offs made
+
+      6. **Consider Wrapper Libraries**: If a library is close but not perfect:
+         - Create a thin wrapper around it
+         - Extend it rather than replace it
+         - Contribute improvements back to the original library
+
+examples:
+  - input: |
+      # Bad: Hand-rolling HTTP client
+      def make_request(url, method='GET', headers=None):
+          import socket
+          # ... 200 lines of socket handling code
+      
+      # Good: Using existing library
+      import requests
+      
+      def make_request(url, method='GET', headers=None):
+          return requests.request(method, url, headers=headers)
+    output: "Using established requests library instead of hand-rolling HTTP client"
+
+  - input: |
+      # Bad: Implementing JSON parsing from scratch
+      def parse_json(data):
+          # ... complex parsing logic
+      
+      # Good: Using standard library
+      import json
+      
+      def parse_json(data):
+          return json.loads(data)
+    output: "Using standard library json module instead of custom implementation"
+
+  - input: |
+      # Bad: Creating custom date/time handling
+      class DateHandler:
+          def __init__(self):
+              # ... complex date logic
+      
+      # Good: Using existing library
+      from datetime import datetime
+      import pytz
+      
+      class DateHandler:
+          def __init__(self):
+              self.now = datetime.now(pytz.UTC)
+    output: "Using datetime and pytz libraries for date/time handling"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["libraries", "dependencies", "code-reuse", "best-practices"]
+</rule>
+description:
+globs:
+alwaysApply: false
+---

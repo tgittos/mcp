@@ -1,0 +1,120 @@
+# Composition Over Inheritance Rule
+
+<rule>
+name: composition_over_inheritance
+description: Encourages using composition over inheritance when designing class relationships
+filters:
+  # Match any source code file
+  - type: file_extension
+    pattern: "\\.(?:rb|py|js|ts|java|cs|cpp|go|rs|php|scala)$"
+  # Match class definitions and inheritance patterns
+  - type: content
+    pattern: "(?:class|interface|trait).*(?:extends|implements|<|:)"
+
+actions:
+  - type: suggest
+    conditions:
+      - pattern: "class\\s+\\w+\\s*(?:extends|implements|:|<)\\s*\\w+"
+        message: |
+          Consider using composition instead of inheritance. Composition offers:
+          
+          1. Better encapsulation and flexibility
+          2. Looser coupling between components
+          3. Easier testing and maintenance
+          4. More explicit and controllable dependencies
+          
+          Instead of:
+          ```
+          class Child extends Parent {
+            // inherited functionality
+          }
+          ```
+          
+          Consider:
+          ```
+          class Child {
+            private component: Parent;
+            
+            constructor(component: Parent) {
+              this.component = component;
+            }
+            
+            // delegate to component as needed
+          }
+          ```
+          
+          Exceptions where inheritance might be appropriate:
+          1. Clear "is-a" relationships with stable base classes
+          2. Framework requirements (e.g., React.Component)
+          3. Simple value-type hierarchies
+          4. Well-defined interfaces/protocols
+
+  - type: suggest
+    conditions:
+      - pattern: "(?:protected|virtual|abstract).*(?:method|function|def)"
+        message: |
+          Protected and virtual methods often indicate tight coupling through inheritance.
+          Consider:
+          
+          1. Using composition with explicit interfaces
+          2. Breaking functionality into smaller, focused components
+          3. Using strategy pattern or dependency injection
+          4. Making methods private or creating separate service classes
+
+examples:
+  - input: |
+      # Bad: Deep inheritance hierarchy
+      class Animal:
+        def make_sound(self): pass
+      
+      class Mammal(Animal):
+        def give_birth(self): pass
+      
+      class Dog(Mammal):
+        def bark(self): pass
+    output: |
+      # Good: Composition-based approach
+      class Sound:
+        def make(self): pass
+      
+      class BirthBehavior:
+        def give_birth(self): pass
+      
+      class Dog:
+        def __init__(self, sound: Sound, birth: BirthBehavior):
+          self.sound = sound
+          self.birth = birth
+        
+        def bark(self):
+          self.sound.make()
+
+  - input: |
+      // Bad: Inheritance for code reuse
+      class DataValidator extends StringUtils {
+        validate(data) {
+          return this.trim(data) && this.isNotEmpty(data);
+        }
+      }
+    output: |
+      // Good: Composition for code reuse
+      class DataValidator {
+        constructor(private stringUtils: StringUtils) {}
+        
+        validate(data) {
+          return this.stringUtils.trim(data) && 
+                 this.stringUtils.isNotEmpty(data);
+        }
+      }
+
+metadata:
+  priority: high
+  version: 1.0
+  tags:
+    - design_patterns
+    - best_practices
+    - code_quality
+</rule>
+description:
+globs:
+alwaysApply: false
+---

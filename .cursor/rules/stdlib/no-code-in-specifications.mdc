@@ -1,0 +1,84 @@
+# No Code in Specifications Rule
+
+<rule>
+name: no-code-in-specifications
+description: Prevents writing code or example code when writing specifications, requirements, or design documents
+filters:
+  # Match specification files
+  - type: file_path
+    pattern: "(?i)(specifications?|specs?|requirements?|design|architecture)/.*\\.(md|txt|rst)$"
+  # Match files with specification-related content
+  - type: content
+    pattern: "(?i)(specification|requirement|design|architecture|overview|spec)"
+  # Match markdown files that appear to be specifications
+  - type: content
+    pattern: "(?i)(# Specification|# Requirements|# Design|# Architecture)"
+
+actions:
+  - type: reject
+    conditions:
+      - pattern: "```(ruby|python|javascript|java|cpp|csharp|go|rust|php|typescript|js|ts|rb|py|jsx|tsx|html|css|sql|bash|sh|yaml|json|xml|toml|ini|conf|config)"
+        message: "Do not include code blocks in specification documents. Specifications should describe requirements, not implementation."
+
+      - pattern: "(?i)(def |class |function |module |require |import |export |public |private |protected |static |final |abstract |interface |trait |struct |enum)"
+        message: "Do not include code syntax or implementation details in specifications. Focus on requirements and design."
+
+      - pattern: "(?i)(example:|example code:|code example:|implementation:|here's how:|code snippet:)"
+        message: "Do not provide code examples in specifications. Use descriptive text instead."
+
+  - type: suggest
+    message: |
+      When writing specifications:
+
+      1. Focus on requirements and design, not implementation:
+         - What the system should do
+         - How components should interact
+         - What data should be processed
+         - What interfaces should be provided
+
+      2. Use descriptive language instead of code:
+         - "The system shall validate user input" (not code)
+         - "Data shall be encrypted before storage" (not code)
+         - "The API shall return JSON responses" (not code)
+
+      3. Acceptable content:
+         - Requirements statements
+         - Design decisions and rationale
+         - Component descriptions
+         - Data flow descriptions
+         - Interface definitions (in plain text)
+         - Architecture diagrams (text-based or links)
+
+      4. Avoid:
+         - Code blocks of any language
+         - Implementation details
+         - Syntax examples
+         - Function signatures
+         - Class definitions
+         - Configuration examples
+
+examples:
+  - input: |
+      # Bad: Including code in specification
+      ```ruby
+      class UserManager
+        def authenticate(user, password)
+          # implementation
+        end
+      end
+      ```
+
+      # Good: Descriptive specification
+      The system shall provide user authentication functionality that validates
+      user credentials against stored user data and returns a success/failure
+      response.
+    output: "Specification focuses on requirements, not implementation"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>
+description: Prevents writing code or example code when writing specifications
+globs: ["specifications/**/*.md", "specs/**/*.md", "requirements/**/*.md", "design/**/*.md", "architecture/**/*.md"]
+alwaysApply: false
+---

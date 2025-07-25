@@ -1,0 +1,65 @@
+# Holistic README Update Rule
+
+<rule>
+name: readme-holistic-update
+description: Prevents creating separate README files for new features and encourages updating the existing README holistically
+filters:
+  # Match README file creation
+  - type: file_path
+    pattern: "(?i).*README.*\\.md$"
+  # Match file creation events
+  - type: event
+    pattern: "file_create"
+  # Match content that suggests feature-specific documentation
+  - type: content
+    pattern: "(?i)(feature|module|component|functionality).*README"
+
+actions:
+  - type: reject
+    conditions:
+      - pattern: "(?i)(README|readme).*\\.md$"
+        message: "Do not create separate README files for new features. Update the existing README.md holistically instead."
+
+  - type: suggest
+    message: |
+      When documenting new features:
+
+      1. **Update existing README.md** instead of creating new README files
+      2. **Integrate new information** into the appropriate sections:
+         - Add new features to the "Features" section
+         - Update installation instructions if needed
+         - Add usage examples to existing sections
+         - Update configuration options
+         - Add new dependencies to requirements
+
+      3. **Maintain a single source of truth** for project documentation
+      4. **Keep the README comprehensive** but well-organized
+      5. **Use clear section headers** to organize different features
+
+      6. **Only create separate README files for**:
+         - Completely separate projects/submodules
+         - API documentation (docs/api.md)
+         - Contributing guidelines (CONTRIBUTING.md)
+         - License information (LICENSE.md)
+
+examples:
+  - input: |
+      # Bad: Creating feature-specific READMEs
+      lib/feature/README.md
+      features/logging/README.md
+      modules/auth/README.md
+
+      # Good: Updating existing README
+      README.md (updated with new feature info)
+      docs/api.md (for API documentation)
+      CONTRIBUTING.md (for contribution guidelines)
+    output: "Update existing README holistically"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,38 @@
+# Python Linting and Formatting with Ruff
+
+<rule>
+name: python_linting_formatting
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Use Ruff for both linting and formatting (Ruff is an extremely fast Python linter and formatter)
+      - Use ruff check to lint code and catch errors
+      - Use ruff format to format code consistently
+      - Use ruff check --fix to automatically fix linting issues
+      - Configure ruff in pyproject.toml with [tool.ruff] section
+      - Use ruff --select ALL to enable all rules for comprehensive checking
+      - Integrate ruff checks into CI and pre-commit hooks
+      - Fix all reported issues before committing code
+examples:
+  - input: |
+      def foo( x= 1 ):
+          return  x+1
+      def bar(): print('bad')
+    output: |
+      def foo(x=1):
+          return x + 1
+      
+      
+      def bar():
+          print("bad")
+      
+      # Use ruff check to lint
+      # Use ruff format to format
+      # Use ruff check --fix to auto-fix issues
+metadata:
+  priority: high
+  version: 1.2
+</rule>

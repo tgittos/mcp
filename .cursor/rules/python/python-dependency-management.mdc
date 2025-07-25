@@ -1,0 +1,38 @@
+# Python Dependency Management with uv
+
+<rule>
+name: python_dependency_management
+filters:
+  - type: file_extension
+    pattern: "\.py$"
+actions:
+  - type: suggest
+    message: |
+      - Use uv for Python dependency management (uv is a fast Python package installer and resolver)
+      - Use pyproject.toml for project configuration and dependencies
+      - Use uv.lock for reproducible dependency resolution
+      - Use uv sync to install dependencies from pyproject.toml
+      - Use uv add to add new dependencies
+      - Use uv remove to remove dependencies
+      - Use uv run to run commands in the project's virtual environment
+examples:
+  - input: |
+      # pyproject.toml
+      [project]
+      dependencies = [
+          "requests",
+      ]
+    output: |
+      # pyproject.toml
+      [project]
+      dependencies = [
+          "requests>=2.31.0",
+      ]
+      
+      # Use uv sync to install dependencies
+      # Use uv add requests to add new dependency
+      # Use uv run python script.py to run in virtual environment
+metadata:
+  priority: medium
+  version: 1.2
+</rule>

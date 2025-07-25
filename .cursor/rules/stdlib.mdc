@@ -1,0 +1,97 @@
+# Standard Library Rules Overview
+
+<rule>
+name: stdlib_rules_overview
+description: Provides an overview of all available standard library rules and when to apply them
+filters:
+  # Match when agents are about to implement code or create files
+  - type: content
+    pattern: "(?i)(create|implement|build|write|add|new|function|class|method|component|service|utility|helper|README|documentation)"
+  # Match code generation events
+  - type: event
+    pattern: "code_generation"
+  # Match file creation events
+  - type: event
+    pattern: "file_create"
+
+actions:
+  - type: suggest
+    message: |
+      📚 STANDARD LIBRARY RULES AVAILABLE
+      
+      The following rules are available in the stdlib folder and should be applied when appropriate:
+
+      1. **codebase-search-first** - Always search the codebase for existing functionality before implementing from scratch
+         - Apply when: Creating new functions, classes, services, or utilities
+         - Ensures: No code duplication and consistency with existing patterns
+
+      2. **composition-over-inheritance** - Use composition over inheritance when designing class relationships
+         - Apply when: Designing class hierarchies or object relationships
+         - Ensures: Better encapsulation, flexibility, and maintainability
+
+      3. **no-code-in-specifications** - Never write code or example code when writing specifications
+         - Apply when: Writing requirements, specifications, or documentation
+         - Ensures: Clean separation between specs and implementation
+
+      4. **no-example-code** - Never write example code, demo files, or demonstration scripts when implementing features
+         - Apply when: Implementing production features
+         - Ensures: Focus on real implementation, not examples
+
+      5. **no-placeholder-code** - Never write placeholder code and always provide complete implementations
+         - Apply when: Writing any code implementation
+         - Ensures: Production-ready code without TODOs or stubs
+
+      6. **production-ready-implementation** - Always write complete, production-ready implementations with full business logic and proper error handling
+         - Apply when: Implementing any business logic or functionality
+         - Ensures: Robust, secure, and maintainable code
+
+      7. **readme-holistic-update** - Update existing README holistically instead of creating separate README files for new features
+         - Apply when: Adding documentation for new features
+         - Ensures: Single source of truth for project documentation
+
+      8. **cursor-rules-location** - Standards for placing Cursor rule files in the correct directory
+         - Apply when: Creating new Cursor rules
+         - Ensures: Proper organization of rule files
+
+      9. **git-commits** - Standards for writing clear and meaningful git commit messages
+         - Apply when: Making git commits
+         - Ensures: Clear project history and collaboration
+
+      💡 USAGE TIPS:
+      - These rules are designed to work together to ensure high-quality code
+      - Apply multiple rules as appropriate for your specific task
+      - Each rule focuses on a specific aspect of development best practices
+      - Following these rules will result in maintainable, production-ready code
+
+examples:
+  - input: |
+      # When implementing a new feature
+      def new_user_service():
+          # Implementation here
+    output: |
+      # Apply: codebase-search-first, production-ready-implementation, no-placeholder-code
+      # 1. Search for existing user services first
+      # 2. Implement complete business logic with error handling
+      # 3. No placeholder code or TODOs
+
+  - input: |
+      # When creating documentation
+      # New feature: User authentication
+    output: |
+      # Apply: readme-holistic-update, no-code-in-specifications
+      # 1. Update existing README.md instead of creating new files
+      # 2. Write specifications without code examples
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["overview", "guidelines", "best-practices", "stdlib"]
+</rule>
+
+description: Overview of all standard library rules available in the stdlib subfolder
+globs: ["**/*"]
+alwaysApply: true
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,130 @@
+<rule>
+name: prefer-functional-techniques
+description: Encourages Cursor agents to prefer functional programming techniques when appropriate for the language, emphasizing immutability and idempotency
+filters:
+  # Match code files that might implement functionality
+  - type: file_extension
+    pattern: "\\.(py|js|ts|java|cpp|c|go|rs|php|rb|cs|scala|haskell|clojure|fsharp|elixir|erlang)$"
+  # Match when implementing new functionality
+  - type: content
+    pattern: "(?i)(def|class|function|pub fn|func|public class|let|const|var|mut|val|defn|fn)"
+  # Match when creating new files
+  - type: event
+    pattern: "file_create"
+
+actions:
+  - type: suggest
+    message: |
+      When implementing functionality, prefer functional programming techniques appropriate for the language:
+
+      1. **Immutability First**: Prefer immutable data structures and operations
+         - Use const/let over var (JavaScript/TypeScript)
+         - Use immutable collections (Python: tuples, frozenset; Java: Collections.unmodifiable*)
+         - Avoid modifying existing objects, create new ones instead
+         - Use copy-on-write patterns when needed
+
+      2. **Pure Functions**: Write functions that are:
+         - **Idempotent**: Same input always produces same output
+         - **Side-effect free**: No external state changes
+         - **Referentially transparent**: Can be replaced with their return value
+         - **Predictable**: Easy to test and reason about
+
+      3. **Language-Appropriate Functional Techniques**:
+         - **Python**: Use list comprehensions, map/filter/reduce, functools
+         - **JavaScript/TypeScript**: Use Array methods (map, filter, reduce), Object.freeze()
+         - **Java**: Use Stream API, Optional, immutable collections
+         - **Rust**: Leverage ownership system, use iterators, avoid mutable references
+         - **Go**: Use value receivers, avoid pointer receivers when possible
+         - **Scala**: Use case classes, Option, Either, immutable collections
+         - **Haskell/Clojure**: Embrace pure functional programming fully
+
+      4. **Avoid Mutable State**: When possible:
+         - Don't modify global variables
+         - Don't modify function parameters
+         - Don't rely on external state
+         - Use dependency injection instead of global state
+
+      5. **Composition Over Mutation**: 
+         - Chain operations instead of modifying in place
+         - Use function composition
+         - Build complex operations from simple, pure functions
+
+      6. **When Imperative is Necessary**: If you must use imperative code:
+         - Keep it isolated and well-documented
+         - Minimize the scope of mutable operations
+         - Make the imperative parts as small as possible
+         - Document why functional approach wasn't suitable
+
+examples:
+  - input: |
+      # Bad: Mutable approach
+      def process_users(users):
+          for user in users:
+              user['active'] = True
+              user['last_login'] = datetime.now()
+          return users
+      
+      # Good: Immutable approach
+      def process_users(users):
+          return [
+              {**user, 'active': True, 'last_login': datetime.now()}
+              for user in users
+          ]
+    output: "Using immutable list comprehension instead of modifying objects in place"
+
+  - input: |
+      # Bad: Mutable state
+      total = 0
+      for num in numbers:
+          total += num
+      
+      # Good: Functional approach
+      total = sum(numbers)
+    output: "Using built-in sum() function instead of mutable accumulator"
+
+  - input: |
+      # Bad: Side effects in function
+      def get_user_data(user_id):
+          global cache
+          if user_id not in cache:
+              cache[user_id] = fetch_from_database(user_id)
+          return cache[user_id]
+      
+      # Good: Pure function with explicit caching
+      def get_user_data(user_id, cache=None):
+          if cache is None:
+              cache = {}
+          if user_id not in cache:
+              cache[user_id] = fetch_from_database(user_id)
+          return cache[user_id], cache
+    output: "Making function pure by passing cache as parameter instead of using global state"
+
+  - input: |
+      # Bad: Modifying array in place
+      const users = [...];
+      users.sort((a, b) => a.name.localeCompare(b.name));
+      
+      # Good: Immutable sort
+      const sortedUsers = [...users].sort((a, b) => a.name.localeCompare(b.name));
+    output: "Creating new array instead of modifying original"
+
+  - input: |
+      # Bad: Mutable object modification
+      def update_user(user, new_data):
+          user.update(new_data)
+          return user
+      
+      # Good: Immutable update
+      def update_user(user, new_data):
+          return {**user, **new_data}
+    output: "Creating new object instead of modifying existing one"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["functional-programming", "immutability", "idempotency", "pure-functions", "best-practices"]
+</rule>
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,69 @@
+# No Example Code Rule
+
+<rule>
+name: no-example-code
+description: Prevents writing example code, demo files, or demonstration scripts when implementing features
+filters:
+  # Match any file creation or editing
+  - type: event
+    pattern: "file_create|file_edit"
+  # Match files that look like examples or demos
+  - type: content
+    pattern: "(?i)(example|demo|demonstration|sample|showcase)"
+  # Match file paths that suggest examples
+  - type: file_path
+    pattern: "(?i)(examples?|demos?|samples?|showcase)/.*"
+
+actions:
+  - type: reject
+    conditions:
+      - pattern: "(?i)(example|demo|demonstration|sample|showcase)"
+        message: "Do not create example code, demo files, or demonstration scripts. Focus on implementing the actual feature only."
+
+  - type: suggest
+    message: |
+      When implementing features:
+
+      1. Focus on the core implementation only
+      2. Do not create:
+         - Example files or scripts
+         - Demo applications
+         - Sample usage files
+         - Showcase code
+         - Tutorial files
+         - Test files that are just examples
+
+      3. Only create:
+         - Production code
+         - Unit tests (RSpec specs)
+         - Integration tests
+         - Documentation (README, API docs)
+         - Configuration files
+
+      4. If examples are needed, they should be:
+         - Part of the main documentation
+         - Inline code comments
+         - README usage sections
+         - API documentation examples
+
+examples:
+  - input: |
+      # Bad: Creating example files
+      examples/logging_demo.rb
+      demo/showcase.rb
+      samples/usage_example.rb
+
+      # Good: Only production code
+      lib/feature.rb
+      spec/feature_spec.rb
+      README.md (with inline examples)
+    output: "Focus on production implementation only"
+
+metadata:
+  priority: high
+  version: 1.0
+</rule>
+description:
+globs:
+alwaysApply: false
+---

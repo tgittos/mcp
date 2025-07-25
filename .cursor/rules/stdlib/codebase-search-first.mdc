@@ -1,0 +1,101 @@
+# Codebase Search First Rule
+
+<rule>
+name: codebase_search_first
+description: Ensures Cursor agents always search the codebase for existing functionality before implementing from scratch
+filters:
+  # Match when agents are about to implement new functionality
+  - type: content
+    pattern: "(?i)(create|implement|build|write|add|new|function|class|method|component|service|utility|helper)"
+  # Match code generation events
+  - type: event
+    pattern: "code_generation"
+  # Match file creation events
+  - type: event
+    pattern: "file_create"
+
+actions:
+  - type: require
+    conditions:
+      - pattern: "(?i)(search|find|look|existing|already|implemented)"
+        message: |
+          ⚠️  CODEBASE SEARCH REQUIRED ⚠️
+          
+          Before implementing new functionality, you MUST search the codebase first to check if:
+          
+          1. Similar functionality already exists
+          2. Related code patterns are already established
+          3. Existing utilities or helpers could be reused
+          4. The feature is partially implemented elsewhere
+          
+          REQUIRED STEPS:
+          1. Use semantic search to find related functionality
+          2. Check for existing classes, methods, or utilities
+          3. Look for similar patterns in the codebase
+          4. Consider extending existing code rather than creating new
+          
+          Only proceed with new implementation if:
+          - No existing functionality is found
+          - Existing code cannot be reasonably extended
+          - You've documented why new implementation is necessary
+
+  - type: suggest
+    message: |
+      🔍 SEARCH THE CODEBASE FIRST
+      
+      Before writing new code, search for:
+      
+      - Similar function names or patterns
+      - Existing utilities or helpers
+      - Related classes or modules
+      - Configuration or setup code
+      
+      Use these search strategies:
+      1. Semantic search for functionality description
+      2. Grep search for specific method/class names
+      3. File search for related files
+      4. Directory exploration for relevant modules
+      
+      This prevents code duplication and maintains consistency!
+
+examples:
+  - input: |
+      # Bad: Implementing without searching
+      def new_utility_function
+        # New implementation
+      end
+      
+      # Good: After searching and confirming no existing solution
+      # Searched codebase for 'utility_function' - no existing implementation found
+      def new_utility_function
+        # New implementation
+      end
+    output: "Properly searched codebase before implementation"
+
+  - input: |
+      # Bad: Creating new service without checking
+      class NewService
+        def initialize
+          # New service
+        end
+      end
+      
+      # Good: After finding existing service pattern
+      # Found existing ServiceBase class - extending instead of creating new
+      class NewService < ServiceBase
+        def initialize
+          super
+          # Extend existing functionality
+        end
+      end
+    output: "Reused existing patterns instead of creating from scratch"
+
+metadata:
+  priority: high
+  version: 1.0
+  tags: ["codebase", "search", "duplication", "consistency"]
+</rule>
+description:
+globs:
+alwaysApply: false
+---

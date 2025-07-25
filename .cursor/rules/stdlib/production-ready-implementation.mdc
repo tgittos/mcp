@@ -1,0 +1,192 @@
+# Production-Ready Implementation Rule
+
+<rule>
+name: production-ready-implementation
+description: Ensures Cursor agents always write complete, production-ready implementations with full business logic and proper error handling
+filters:
+  # Match code files that should contain complete implementations
+  - type: file_extension
+    pattern: "\\.(rb|js|ts|jsx|tsx|py|java|c|cpp|cs|php|go|rs|swift|kt|scala|clj|hs|ml|fs|vb|sql|sh|bash|ps1)$"
+  
+  # Match content that might indicate incomplete implementations
+  - type: content
+    pattern: "(?i)(def|function|method|class|module|public|private|protected|async|await|yield|return|throw|raise|panic|assert|if|for|while|case|switch|try|catch|finally|begin|rescue|ensure)"
+
+actions:
+  - type: reject
+    conditions:
+      # Reject incomplete method implementations
+      - pattern: "(?i)(def\\s+\\w+\\s*\\([^)]*\\)\\s*\\n\\s*(?:pass|return|raise|throw|panic|unimplemented|todo|not_implemented|#|//|/\\*|<!--))"
+        message: "Incomplete method implementation detected. Implement the full business logic with proper error handling and return values."
+      
+      # Reject functions that don't handle all code paths
+      - pattern: "(?i)(function\\s+\\w+\\s*\\([^)]*\\)\\s*\\{[^}]*\\})"
+        message: "Function implementation may be incomplete. Ensure all code paths are handled and proper return values are provided."
+      
+      # Reject incomplete conditional logic
+      - pattern: "(?i)(if\\s*\\([^)]*\\)\\s*\\{[^}]*\\}\\s*(?:else\\s*\\{[^}]*\\})?)"
+        message: "Conditional logic may be incomplete. Handle all possible cases and edge conditions."
+      
+      # Reject incomplete error handling
+      - pattern: "(?i)(try\\s*\\{[^}]*\\}\\s*catch\\s*\\([^)]*\\)\\s*\\{[^}]*\\})"
+        message: "Error handling may be incomplete. Implement proper error recovery, logging, and user feedback."
+
+  - type: suggest
+    message: |
+      When implementing any logic, ensure it is production-ready by following these guidelines:
+
+      1. **Complete Business Logic:**
+         - Implement ALL required functionality, not just the happy path
+         - Handle edge cases, null values, empty collections, and invalid inputs
+         - Provide meaningful return values for all code paths
+         - Implement proper validation and sanitization
+
+      2. **Production-Ready Error Handling:**
+         - Catch and handle specific exceptions, not generic ones
+         - Provide meaningful error messages for debugging
+         - Implement proper logging for errors and important events
+         - Gracefully handle failures without crashing the application
+         - Return appropriate error responses or fallback values
+
+      3. **Input Validation and Sanitization:**
+         - Validate all inputs before processing
+         - Sanitize user inputs to prevent security issues
+         - Handle malformed or unexpected data gracefully
+         - Provide clear feedback for invalid inputs
+
+      4. **Complete Feature Implementation:**
+         - Implement all methods and functions fully
+         - Handle all possible states and conditions
+         - Provide complete API responses with proper status codes
+         - Implement proper resource cleanup and disposal
+
+      5. **Performance and Scalability:**
+         - Use efficient algorithms and data structures
+         - Handle large datasets appropriately
+         - Implement proper caching where beneficial
+         - Consider memory usage and resource management
+
+      6. **Security Best Practices:**
+         - Validate and sanitize all inputs
+         - Use parameterized queries for database operations
+         - Implement proper authentication and authorization
+         - Follow the principle of least privilege
+
+      7. **Testing Considerations:**
+         - Write code that is testable and maintainable
+         - Use dependency injection where appropriate
+         - Implement proper separation of concerns
+         - Make functions pure and predictable where possible
+
+examples:
+  - input: |
+      def process_user_data(user_data):
+          if user_data:
+              return user_data['name']
+          return None
+    output: |
+      def process_user_data(user_data):
+          if not user_data:
+              raise ValueError("User data cannot be nil or empty")
+          
+          if not isinstance(user_data, dict):
+              raise TypeError("User data must be a dictionary")
+          
+          name = user_data.get('name')
+          if not name or not isinstance(name, str):
+              raise ValueError("User data must contain a valid 'name' string")
+          
+          # Sanitize the name
+          sanitized_name = name.strip()
+          if len(sanitized_name) < 1:
+              raise ValueError("User name cannot be empty after sanitization")
+          
+          return sanitized_name
+
+  - input: |
+      async function fetchUserData(userId) {
+          const response = await fetch(`/api/users/${userId}`);
+          return response.json();
+      }
+    output: |
+      async function fetchUserData(userId) {
+          if (!userId || typeof userId !== 'string') {
+              throw new Error('Valid user ID is required');
+          }
+          
+          try {
+              const response = await fetch(`/api/users/${userId}`, {
+                  method: 'GET',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${getAuthToken()}`
+                  }
+              });
+              
+              if (!response.ok) {
+                  if (response.status === 404) {
+                      throw new Error(`User with ID ${userId} not found`);
+                  }
+                  throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              const userData = await response.json();
+              
+              // Validate the response structure
+              if (!userData || typeof userData !== 'object') {
+                  throw new Error('Invalid user data received from server');
+              }
+              
+              return userData;
+          } catch (error) {
+              logger.error('Failed to fetch user data', { userId, error: error.message });
+              throw error;
+          }
+      }
+
+  - input: |
+      def calculate_discount(price, discount_percent):
+          return price * (discount_percent / 100)
+    output: |
+      def calculate_discount(price, discount_percent):
+          # Validate inputs
+          if not isinstance(price, (int, float)) or price < 0:
+              raise ValueError("Price must be a non-negative number")
+          
+          if not isinstance(discount_percent, (int, float)):
+              raise ValueError("Discount percentage must be a number")
+          
+          if discount_percent < 0 or discount_percent > 100:
+              raise ValueError("Discount percentage must be between 0 and 100")
+          
+          # Calculate discount
+          discount_amount = price * (discount_percent / 100)
+          
+          # Ensure we don't return negative values
+          final_price = max(0, price - discount_amount)
+          
+          # Round to 2 decimal places for currency
+          return round(final_price, 2)
+
+metadata:
+  priority: critical
+  version: 1.0
+  tags: ["production", "implementation", "quality", "completeness", "error-handling"]
+</rule>
+description:
+globs:
+alwaysApply: false
+---
+
+## Production-Ready Implementation Standards
+
+This rule ensures that all code implementations are complete, robust, and ready for production use. It goes beyond simply avoiding placeholders to ensure that:
+
+- **All business logic is fully implemented** with proper error handling
+- **Input validation and sanitization** are always included
+- **Edge cases and error conditions** are properly handled
+- **Security best practices** are followed
+- **Performance considerations** are taken into account
+- **Code is maintainable and testable**
+
+The rule complements the existing `no-placeholder-code` rule by focusing on the quality and completeness of implementations rather than just the absence of placeholder text.
